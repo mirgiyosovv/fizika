@@ -1,0 +1,428 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>FIZIKA</title>
+<style>
+/* Layout: header, then circuit + controls side by side (stacked on phones), then graph, quiz and records. */
+:root {
+  --bg: #eef3f8;
+  --panel: #ffffff;
+  --ink: #1c2a37;
+  --muted: #6a7b8b;
+  --line: #d6e0ea;
+  --accent: #2f7fc1;
+  --accent-ink: #ffffff;
+  --copper: #c7774a;
+  --wire: #9fb0bf;
+  --ok: #2e8b57;
+  --warn: #c0622a;
+  --danger: #c0392b;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111b24; --panel: #1a2733; --ink: #e6eef5; --muted: #8fa3b5; --line: #2b3d4d;
+    --accent: #5aa9e6; --accent-ink: #0b1620; --copper: #d68a5c; --wire: #4c5f70;
+    --ok: #5fc08a; --warn: #e89a5c; --danger: #e8705f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111b24; --panel: #1a2733; --ink: #e6eef5; --muted: #8fa3b5; --line: #2b3d4d;
+  --accent: #5aa9e6; --accent-ink: #0b1620; --copper: #d68a5c; --wire: #4c5f70;
+  --ok: #5fc08a; --warn: #e89a5c; --danger: #e8705f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 28px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+button, select, input { font: inherit; color: inherit; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-width: 0; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.logo { width: 40px; height: 40px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 800; font-size: 19px; flex: none; }
+h1 { font-size: 20px; margin: 0; letter-spacing: .08em; }
+.by { color: var(--muted); font-size: 12px; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  background: var(--panel); border: 1px solid var(--line); padding: 7px 12px;
+  border-radius: 8px; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:focus-visible, .sw:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.on { border-color: var(--ok); color: var(--ok); }
+.btn.off { border-color: var(--warn); color: var(--warn); }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; min-width: 0; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
+.card h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 0 0 10px; font-weight: 700; }
+svg { display: block; max-width: 100%; height: auto; }
+.lbl { font-size: 13px; fill: var(--ink); }
+.val { font-size: 15px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.dim { fill: var(--muted); font-size: 12px; }
+.warnbox { display: none; margin-top: 10px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--danger); color: var(--danger); font-size: 13px; }
+.warnbox.show { display: block; }
+.ctrl { display: grid; gap: 4px; margin-bottom: 12px; }
+.ctrl label { display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; }
+.ctrl output { color: var(--accent); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+.seg button { padding: 7px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+.row:first-of-type { border-top: 0; }
+.row span:first-child { color: var(--muted); }
+.row strong { font-variant-numeric: tabular-nums; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.stat small { color: var(--muted); display: block; font-size: 12px; }
+.stat b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.quiz p { margin: 0 0 10px; font-weight: 600; }
+.quiz .opts { display: grid; gap: 6px; }
+.quiz .opts button { text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; }
+.quiz .opts button.good { border-color: var(--ok); color: var(--ok); }
+.quiz .opts button.bad { border-color: var(--danger); color: var(--danger); }
+.quiz .res { margin-top: 8px; font-size: 13px; min-height: 1.4em; color: var(--muted); }
+.wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 7px 6px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 600; }
+.foot { color: var(--muted); font-size: 12px; text-align: center; }
+.sw { cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<header>
+  <div class="brand">
+    <div class="logo">F</div>
+    <div>
+      <h1>FIZIKA</h1>
+      <div class="by">Elektr zanjiri laboratoriyasi · Muallif: Rustamova Shaxnoza</div>
+    </div>
+  </div>
+  <div class="tools">
+    <button class="btn" id="btnTheme" aria-label="Mavzuni almashtirish">◐ Mavzu</button>
+    <button class="btn" id="btnReset">↺ Tiklash</button>
+    <button class="btn" id="btnHelp">? Yordam</button>
+  </div>
+</header>
+
+<div class="grid">
+  <section class="card">
+    <h2>Sxema</h2>
+    <svg viewBox="0 0 640 380" role="img" aria-label="Elektr zanjiri sxemasi">
+      <path d="M60 70 H580 V300 H60 Z" fill="none" stroke="var(--wire)" stroke-width="5" stroke-linejoin="round"/>
+      <path id="wireFlow" d="M60 70 H580 V300 H60 Z" fill="none" stroke="var(--copper)" stroke-width="5" stroke-linejoin="round" stroke-dasharray="14 12" opacity="0">
+        <animate attributeName="stroke-dashoffset" from="52" to="0" dur="0.9s" repeatCount="indefinite"/>
+      </path>
+      <!-- parallel branch around R1 -->
+      <path id="branch" d="M300 70 V150 H480 V70" fill="none" stroke="var(--wire)" stroke-width="5" stroke-linejoin="round" opacity="0"/>
+
+      <!-- battery -->
+      <g transform="translate(120 70)">
+        <rect x="-4" y="-22" width="70" height="44" rx="6" fill="#2b3a48"/>
+        <rect x="-4" y="-22" width="22" height="44" rx="6" fill="#f2b630"/>
+        <text x="7" y="6" font-size="16" font-weight="700" fill="#fff">+</text>
+        <text x="50" y="6" font-size="16" font-weight="700" fill="#fff">–</text>
+      </g>
+      <text x="150" y="40" text-anchor="middle" class="dim">E = <tspan id="lblE" class="val" font-size="13">2.00 V</tspan></text>
+      <text x="150" y="104" text-anchor="middle" class="dim">r = <tspan id="lblr" font-size="12" fill="var(--ink)">0.00 Ω</tspan></text>
+
+      <!-- R1 -->
+      <g transform="translate(340 70)">
+        <rect x="0" y="-14" width="92" height="28" rx="14" fill="#e8c9a0"/>
+        <rect x="14" y="-14" width="8" height="28" fill="#3b2a1d"/><rect x="30" y="-14" width="8" height="28" fill="#1b1b1b"/>
+        <rect x="46" y="-14" width="8" height="28" fill="#c0392b"/><rect x="62" y="-14" width="8" height="28" fill="#c9a227"/>
+      </g>
+      <text x="386" y="40" text-anchor="middle" class="dim">R1 = <tspan id="lblR1" font-size="12" fill="var(--ink)">10 Ω</tspan></text>
+
+      <!-- R2 in series (bottom wire) -->
+      <g id="r2s" transform="translate(236 300)">
+        <rect x="0" y="-14" width="92" height="28" rx="14" fill="#cfe3f2"/>
+        <rect x="14" y="-14" width="8" height="28" fill="#3b2a1d"/><rect x="30" y="-14" width="8" height="28" fill="#1b1b1b"/>
+        <rect x="46" y="-14" width="8" height="28" fill="#2f7fc1"/><rect x="62" y="-14" width="8" height="28" fill="#c9a227"/>
+      </g>
+      <!-- R2 in parallel (branch) -->
+      <g id="r2p" transform="translate(340 150)" opacity="0">
+        <rect x="0" y="-14" width="92" height="28" rx="14" fill="#cfe3f2"/>
+        <rect x="14" y="-14" width="8" height="28" fill="#3b2a1d"/><rect x="30" y="-14" width="8" height="28" fill="#1b1b1b"/>
+        <rect x="46" y="-14" width="8" height="28" fill="#2f7fc1"/><rect x="62" y="-14" width="8" height="28" fill="#c9a227"/>
+      </g>
+      <text id="lblR2" x="282" y="330" text-anchor="middle" class="dim">R2 = 20 Ω</text>
+
+      <!-- switch K1 -->
+      <g id="switchG" class="sw" tabindex="0" role="button" aria-label="Kalit K1">
+        <rect x="118" y="282" width="96" height="22" rx="6" fill="#c7b9a6" opacity=".6"/>
+        <line id="blade" x1="128" y1="293" x2="200" y2="293" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="128" cy="293" r="5" fill="var(--ink)"/><circle cx="204" cy="293" r="5" fill="var(--ink)"/>
+      </g>
+      <text x="166" y="268" text-anchor="middle" class="dim">K1</text>
+      <text id="lblK" x="166" y="326" text-anchor="middle" class="lbl" font-weight="600">Ulangan</text>
+
+      <!-- ammeter -->
+      <g transform="translate(460 300)">
+        <rect x="-62" y="-30" width="124" height="60" rx="8" fill="#e8b57a" stroke="#c7874a"/>
+        <rect x="-46" y="-18" width="92" height="36" rx="4" fill="#fff"/>
+        <text id="lblI" x="0" y="7" text-anchor="middle" class="val" fill="#1c2a37">0.00</text>
+        <text x="-50" y="-20" font-size="10" fill="#7a5a3a">A</text>
+      </g>
+      <!-- voltmeter -->
+      <g transform="translate(386 0)">
+        <rect x="-62" y="2" width="124" height="44" rx="8" fill="#e8b57a" stroke="#c7874a"/>
+        <rect x="-46" y="10" width="92" height="24" rx="4" fill="#fff"/>
+        <text id="lblU" x="0" y="28" text-anchor="middle" class="val" fill="#1c2a37">0.00 V</text>
+      </g>
+    </svg>
+    <div id="warn" class="warnbox" role="alert">Qisqa tutashuv! Tashqi qarshilik juda kichik, tok haddan tashqari oshdi.</div>
+    <p class="dim" style="margin:10px 0 0">Kalitni bosing. Ulanish turini tanlang: ketma-ket yoki parallel.</p>
+  </section>
+
+  <aside class="card">
+    <h2>Boshqaruv</h2>
+    <div class="seg" role="group" aria-label="Ulanish turi">
+      <button id="modeS" aria-pressed="true">Ketma-ket</button>
+      <button id="modeP" aria-pressed="false">Parallel</button>
+    </div>
+    <div class="ctrl"><label for="rE">Manba E <output id="oE"></output></label><input type="range" id="rE" min="0" max="12" step="0.5" value="2"></div>
+    <div class="ctrl"><label for="rr">Ichki qarshilik r <output id="or"></output></label><input type="range" id="rr" min="0" max="5" step="0.1" value="0"></div>
+    <div class="ctrl"><label for="rR1">R1 <output id="oR1"></output></label><input type="range" id="rR1" min="1" max="100" step="1" value="10"></div>
+    <div class="ctrl"><label for="rR2">R2 <output id="oR2"></output></label><input type="range" id="rR2" min="1" max="100" step="1" value="20"></div>
+    <button class="btn on" id="btnSwitch" style="width:100%">Kalit: ulangan</button>
+    <div style="margin-top:12px">
+      <div class="row"><span>Tashqi Rt</span><strong id="vRt">—</strong></div>
+      <div class="row"><span>Tok I</span><strong id="vI">—</strong></div>
+      <div class="row"><span>Tashqi kuchlanish U</span><strong id="vU">—</strong></div>
+      <div class="row"><span>Ichki kuchlanish tushuvi</span><strong id="vUr">—</strong></div>
+    </div>
+  </aside>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Quvvat grafigi P(Rt)</h2>
+    <svg viewBox="0 0 520 260" role="img" aria-label="Tashqi qarshilikka bog‘liq quvvat grafigi">
+      <line x1="50" y1="210" x2="500" y2="210" stroke="var(--line)"/>
+      <line x1="50" y1="20" x2="50" y2="210" stroke="var(--line)"/>
+      <path id="pcurve" fill="none" stroke="var(--accent)" stroke-width="3"/>
+      <line id="rline" y1="20" y2="210" stroke="var(--ok)" stroke-dasharray="5 5"/>
+      <circle id="pdot" r="6" fill="var(--copper)"/>
+      <text x="500" y="232" text-anchor="end" class="dim">Rt, Ω (0–60)</text>
+      <text x="44" y="16" text-anchor="end" class="dim">P, W</text>
+      <text id="pmaxLbl" x="58" y="34" class="dim"></text>
+    </svg>
+    <div class="stats" style="margin-top:12px">
+      <div class="stat"><small>Foydali ish FIK</small><b id="vFik">—</b></div>
+      <div class="stat"><small>Iste’molchi quvvati</small><b id="vP">—</b></div>
+      <div class="stat"><small>Manba quvvati</small><b id="vPm">—</b></div>
+      <div class="stat"><small>Maksimal quvvat (r = Rt)</small><b id="vPmax">—</b></div>
+    </div>
+  </section>
+
+  <section class="card quiz">
+    <h2>Savol</h2>
+    <p>Ichki qarshilik r bo‘lganda, iste’molchiga maksimal quvvat qaysi tashqi qarshilikda beriladi?</p>
+    <div class="opts" id="opts"></div>
+    <div class="res" id="res">Javobni tanlang.</div>
+    <h2 style="margin-top:14px">Yozuvlar</h2>
+    <div class="wrap">
+      <table>
+        <thead><tr><th>E, V</th><th>r, Ω</th><th>Rt, Ω</th><th>I, A</th><th>P, W</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="5" style="text-align:center;color:var(--muted)">Hali yozuv yo‘q</td></tr></tbody>
+      </table>
+    </div>
+    <div class="tools" style="margin-top:10px">
+      <button class="btn primary" id="btnRecord">+ Natijani yozish</button>
+      <button class="btn" id="btnCopy">Nusxalash</button>
+      <button class="btn" id="btnClear">Tozalash</button>
+    </div>
+  </section>
+</div>
+
+<div class="foot">Ohm qonuni: I = E / (Rt + r) · Iste’molchi quvvati P = I²·Rt · Maksimal quvvat: Rt = r · Muallif: Rustamova Shaxnoza</div>
+
+<script>
+(function () {
+  var st = { E: 2, r: 0, R1: 10, R2: 20, series: true, closed: true, n: 0, qAnswered: false };
+  var $ = function (id) { return document.getElementById(id); };
+  var f = function (x, d) { return isFinite(x) ? x.toFixed(d) : "—"; };
+  var NS = "http://www.w3.org/2000/svg";
+
+  function externalR() {
+    if (st.series) return st.R1 + st.R2;
+    return st.R1 * st.R2 / (st.R1 + st.R2);
+  }
+  function calc() {
+    var Rt = externalR();
+    var I = st.closed ? st.E / (Rt + st.r) : 0;
+    var U = I * Rt;
+    var Ur = I * st.r;
+    var P = I * I * Rt;
+    var Pm = st.E * I;
+    var fik = st.closed && (Rt + st.r) > 0 ? Rt / (Rt + st.r) * 100 : NaN;
+    return { Rt: Rt, I: I, U: U, Ur: Ur, P: P, Pm: Pm, fik: fik };
+  }
+
+  function drawCurve() {
+    var E = st.E, r = st.r, pts = [], maxP = 0, x, p;
+    var xMax = 60;
+    for (var i = 0; i <= 120; i++) {
+      x = 0.5 + (xMax - 0.5) * i / 120;
+      p = E * E * x / Math.pow(x + r, 2);
+      if (p > maxP) maxP = p;
+      pts.push(x);
+    }
+    var yScale = maxP > 0 ? 190 / maxP : 0;
+    var d = "";
+    pts.forEach(function (xx, k) {
+      var px = 50 + (xx / xMax) * 450;
+      var py = 210 - (E * E * xx / Math.pow(xx + r, 2)) * yScale;
+      d += (k ? "L" : "M") + px.toFixed(1) + " " + py.toFixed(1);
+    });
+    $("pcurve").setAttribute("d", d);
+    var Rt = externalR();
+    var cx = 50 + (Math.min(Rt, xMax) / xMax) * 450;
+    var cy = 210 - (E * E * Rt / Math.pow(Rt + r, 2)) * yScale;
+    $("pdot").setAttribute("cx", cx.toFixed(1));
+    $("pdot").setAttribute("cy", cy.toFixed(1));
+    var rx = 50 + (Math.min(r, xMax) / xMax) * 450;
+    $("rline").setAttribute("x1", rx.toFixed(1));
+    $("rline").setAttribute("x2", rx.toFixed(1));
+    $("pmaxLbl").textContent = "Pmax = " + f(E * E / (4 * Math.max(r, 1e-9)), 2) + " W" + (r === 0 ? " (r = 0)" : "");
+  }
+
+  function render() {
+    var c = calc();
+    $("oE").textContent = f(st.E, 1) + " V";
+    $("or").textContent = f(st.r, 1) + " Ω";
+    $("oR1").textContent = st.R1 + " Ω";
+    $("oR2").textContent = st.R2 + " Ω";
+    $("lblE").textContent = f(st.E, 2) + " V";
+    $("lblr").textContent = f(st.r, 2) + " Ω";
+    $("lblR1").textContent = st.R1 + " Ω";
+    $("lblR2").textContent = st.R2 + " Ω";
+    $("lblI").textContent = f(c.I, 2);
+    $("lblU").textContent = f(c.U, 2) + " V";
+    $("lblK").textContent = st.closed ? "Ulangan" : "Uzilgan";
+    $("lblK").setAttribute("fill", st.closed ? "var(--ok)" : "var(--warn)");
+    $("blade").setAttribute("x2", st.closed ? 200 : 150);
+    $("blade").setAttribute("y2", st.closed ? 293 : 268);
+
+    $("r2s").setAttribute("opacity", st.series ? 1 : 0);
+    $("r2p").setAttribute("opacity", st.series ? 0 : 1);
+    $("branch").setAttribute("opacity", st.series ? 0 : 1);
+    $("lblR2").setAttribute("opacity", st.series ? 1 : 0);
+    $("wireFlow").setAttribute("opacity", st.closed && c.I > 0 ? 1 : 0);
+    $("modeS").setAttribute("aria-pressed", st.series);
+    $("modeP").setAttribute("aria-pressed", !st.series);
+
+    var b = $("btnSwitch");
+    b.textContent = "Kalit: " + (st.closed ? "ulangan" : "uzilgan");
+    b.className = "btn " + (st.closed ? "on" : "off");
+    b.style.width = "100%";
+
+    $("vRt").textContent = f(c.Rt, 2) + " Ω";
+    $("vI").textContent = f(c.I, 3) + " A";
+    $("vU").textContent = f(c.U, 2) + " V";
+    $("vUr").textContent = f(c.Ur, 2) + " V";
+    $("vFik").textContent = isFinite(c.fik) ? f(c.fik, 1) + " %" : "—";
+    $("vP").textContent = f(c.P, 3) + " W";
+    $("vPm").textContent = f(c.Pm, 3) + " W";
+    $("vPmax").textContent = f(st.E * st.E / (4 * Math.max(st.r, 1e-9)), 2) + " W";
+
+    var danger = st.closed && c.I > 5;
+    $("warn").classList.toggle("show", danger);
+    drawCurve();
+  }
+
+  function toggleSwitch() { st.closed = !st.closed; render(); }
+
+  $("rE").addEventListener("input", function (e) { st.E = +e.target.value; render(); });
+  $("rr").addEventListener("input", function (e) { st.r = +e.target.value; render(); });
+  $("rR1").addEventListener("input", function (e) { st.R1 = +e.target.value; render(); });
+  $("rR2").addEventListener("input", function (e) { st.R2 = +e.target.value; render(); });
+  $("modeS").addEventListener("click", function () { st.series = true; render(); });
+  $("modeP").addEventListener("click", function () { st.series = false; render(); });
+  $("switchG").addEventListener("click", toggleSwitch);
+  $("switchG").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSwitch(); }
+  });
+  $("btnSwitch").addEventListener("click", toggleSwitch);
+
+  $("btnTheme").addEventListener("click", function () {
+    var root = document.documentElement;
+    var cur = root.getAttribute("data-theme");
+    var dark = cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    root.setAttribute("data-theme", dark ? "light" : "dark");
+  });
+  $("btnReset").addEventListener("click", function () {
+    st = { E: 2, r: 0, R1: 10, R2: 20, series: true, closed: true, n: st.n, qAnswered: false };
+    $("rE").value = 2; $("rr").value = 0; $("rR1").value = 10; $("rR2").value = 20;
+    render();
+  });
+  $("btnHelp").addEventListener("click", function () {
+    var t = $("btnHelp");
+    t.textContent = t.textContent === "? Yordam" ? "? Yashirish" : "? Yordam";
+    document.querySelectorAll(".foot").forEach(function (x) { x.hidden = t.textContent === "? Yordam" ? false : false; });
+  });
+
+  $("btnRecord").addEventListener("click", function () {
+    var c = calc();
+    var tbody = $("rows");
+    if (st.n === 0) tbody.innerHTML = "";
+    st.n++;
+    var tr = document.createElement("tr");
+    [f(st.E, 1), f(st.r, 1), f(c.Rt, 1), f(c.I, 3), f(c.P, 3)].forEach(function (v) {
+      var td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  $("btnClear").addEventListener("click", function () {
+    $("rows").innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Hali yozuv yo‘q</td></tr>';
+    st.n = 0;
+  });
+  $("btnCopy").addEventListener("click", function () {
+    var lines = ["E,r,Rt,I,P"];
+    document.querySelectorAll("#rows tr").forEach(function (tr) {
+      var cells = tr.querySelectorAll("td");
+      if (cells.length === 5) lines.push(Array.prototype.map.call(cells, function (td) { return td.textContent; }).join(","));
+    });
+    var text = lines.join("\n");
+    var btn = $("btnCopy");
+    try {
+      navigator.clipboard.writeText(text).then(function () { btn.textContent = "Nusxalandi"; }, function () { btn.textContent = "Nusxalanmadi"; });
+    } catch (e) { btn.textContent = "Nusxalanmadi"; }
+  });
+
+  var opts = [
+    { t: "Rt = r", ok: true },
+    { t: "Rt = 2r", ok: false },
+    { t: "Rt = 0", ok: false },
+    { t: "Rt = ∞", ok: false }
+  ];
+  var box = $("opts");
+  opts.forEach(function (o) {
+    var b = document.createElement("button");
+    b.textContent = o.t;
+    b.addEventListener("click", function () {
+      if (st.qAnswered) return;
+      st.qAnswered = true;
+      b.classList.add(o.ok ? "good" : "bad");
+      $("res").textContent = o.ok
+        ? "To‘g‘ri. Maksimal quvvat tashqi qarshilik ichki qarshilikka teng bo‘lganda beriladi (P = E²/4r)."
+        : "Noto‘g‘ri. Grafikdagi nuqtani r chizig‘i bilan solishtiring.";
+    });
+    box.appendChild(b);
+  });
+
+  render();
+})();
+</script>
+</body></html>
